@@ -81,7 +81,7 @@ User pool
 
   rain deploy id-pool.yml ID-POOL \
   --s3-bucket cfn-working \
-  --config id-pool-parameter.yml \
+  --config config/id-pool-parameter.yml \
   --profile admin
 
 .. note::
@@ -94,7 +94,7 @@ User pool
 
   rain deploy user-pool.yml USER-POOL \
   --s3-bucket cfn-working \
-  --config user-pool-parameter.yml \
+  --config config/user-pool-parameter.yml \
   --profile admin
 
 .. note::
