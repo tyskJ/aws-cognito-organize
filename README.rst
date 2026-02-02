@@ -8,7 +8,13 @@
 =====================================================================
 構成図
 =====================================================================
-.. image:: ./doc/drawio/architecture.drawio.png
+ID pool
+---------------------------------------------------------------------
+.. image:: ./doc/drawio/architecture_id_pool.drawio.png
+
+User pool
+---------------------------------------------------------------------
+.. image:: ./doc/drawio/architecture_user_pool.drawio.png
 
 =====================================================================
 デプロイ - Terraform -
@@ -65,13 +71,30 @@
 
 実作業 - ローカル -
 =====================================================================
-1. スタックデプロイ
+.. note::
+
+  * 試したい方をデプロイしてください
+
+`ID pool` 検証用スタックデプロイ
 ---------------------------------------------------------------------
 .. code-block:: bash
 
-  rain deploy cognito-organize.yml COGNITO-ORGANIZE \
+  rain deploy id-pool.yml ID-POOL \
   --s3-bucket cfn-working \
-  --config parameter.yml \
+  --config id-pool-parameter.yml \
+  --profile admin
+
+.. note::
+
+  * S3バケット名は必要に応じて修正してください
+
+`User pool` 検証用スタックデプロイ
+---------------------------------------------------------------------
+.. code-block:: bash
+
+  rain deploy user-pool.yml USER-POOL \
+  --s3-bucket cfn-working \
+  --config user-pool-parameter.yml \
   --profile admin
 
 .. note::
@@ -80,11 +103,16 @@
 
 後片付け - ローカル -
 =====================================================================
-1. スタック削除
+1. 検証用スタック削除
 ---------------------------------------------------------------------
 .. code-block:: bash
 
-  rain rm COGNITO-ORGANIZE --profile admin
+  rain rm ID-POOL --profile admin
+  rain rm USER-POOL --profile admin
+
+.. note::
+
+  * 試した方を削除してください
 
 2. デプロイ用バケット削除
 ---------------------------------------------------------------------
