@@ -25,4 +25,4 @@ User pool
 * macOS Sequoia ( v15.7.2 )
 * Visual Studio Code 1.106.3
 * Rain v1.24.2
-* aws-cli/2.33.12
+* aws-cli 2.33.12
