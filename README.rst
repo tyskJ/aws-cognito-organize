@@ -30,25 +30,3 @@ User pool
 フォルダ構成
 =====================================================================
 * `こちら <./folder.md>`_ を参照
-
-前提条件
-=====================================================================
-* *AdministratorAccess* がアタッチされているIAMユーザーを作成していること
-* 実作業は *envs* フォルダ配下の各環境フォルダで実施すること
-* 以下コマンドを実行し、*admin* プロファイルを作成していること (デフォルトリージョンは *ap-northeast-1* )
-
-.. code-block:: bash
-
-  aws login --profile admin
-
-.. code-block:: bash
-
-  sed -i '' '/^\[profile admin\]/a\
-  credential_process = aws configure export-credentials --profile admin
-  ' ~/.aws/config
-
-事前作業(1)
-=====================================================================
-1. 各種モジュールインストール
----------------------------------------------------------------------
-* `GitHub <https://github.com/tyskJ/common-environment-setup>`_ を参照
