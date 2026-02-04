@@ -1,0 +1,169 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: "Organize for ID Pool"
+
+Transform: 
+  - "AWS::LanguageExtensions"
+
+# ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║ CloudFormation Template Metadata                                                              ║
+# ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
+# ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: User Pool Configuration
+        Parameters:
+          - AuthUserEmail
+
+# ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║ CloudFormation Template Parameters                                                            ║
+# ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
+# ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
+Parameters:
+  AuthUserEmail:
+    Description: Auth User Email Address
+    Type: String
+  
+# ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║ CloudFormation Template Mappings                                                              ║
+# ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
+# ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
+Mappings: 
+  IamParams:
+    PolicyCommon:
+      Description: Get Credentials from ID pool
+      Name: iam-policy-get-credentials
+    RoleAnonymous:
+      Description: Cognito ID pool Anonymous User
+      Name: iam-role-anonymous-user
+    RoleAuthenticated:
+      Description: Cognito ID pool Authenticated User
+      Name: iam-role-authenticated-user
+
+# ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║ CloudFormation Template Conditions                                                            ║
+# ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
+# ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
+# Conditions: 
+
+# ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║ CloudFormation Template Resources                                                             ║
+# ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
+# ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
+Resources:
+  # -------------------------------------
+  # Cognito ID pool
+  # -------------------------------------
+  IdPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: "id-pool"
+      AllowUnauthenticatedIdentities: true
+      IdentityPoolTags:
+        - Key: Name
+          Value: "id-pool"
+
+  # -------------------------------------
+  # IAM Policy - Common
+  # -------------------------------------
+  PolicyCommon:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !FindInMap [IamParams, PolicyCommon, Description]
+      ManagedPolicyName: !FindInMap [IamParams, PolicyCommon, Name]
+      PolicyDocument:
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "AllowGetCredentialsFromIdPool",
+                    "Effect": "Allow",
+                    "Action": [
+                        "cognito-identity:GetCredentialsForIdentity"
+                    ],
+                    "Resource": [
+                        "*"
+                    ]
+                }
+            ]
+        }
+
+  # -------------------------------------
+  # IAM Role - Anonymous User
+  # -------------------------------------
+  RoleForAnonymous:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: !FindInMap [IamParams, RoleAnonymous, Description]
+      RoleName: !FindInMap [IamParams, RoleAnonymous, Name]
+      AssumeRolePolicyDocument:
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Federated": "cognito-identity.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRoleWithWebIdentity",
+                    "Condition": {
+                        "StringEquals": {
+                            "cognito-identity.amazonaws.com:aud": { Ref: IdPool }
+                        },
+                        "ForAnyValue:StringLike": {
+                            "cognito-identity.amazonaws.com:amr": "unauthenticated"
+                        }
+                    }
+                }
+            ]
+        }
+      ManagedPolicyArns:
+        - !Ref PolicyCommon
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Tags:
+        - Key: Name
+          Value: !FindInMap [IamParams, RoleAnonymous, Name]
+
+  # -------------------------------------
+  # IAM Role - Authenticated User
+  # -------------------------------------
+  RoleForAuthenticated:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: !FindInMap [IamParams, RoleAuthenticated, Description]
+      RoleName: !FindInMap [IamParams, RoleAuthenticated, Name]
+      AssumeRolePolicyDocument:
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Federated": "cognito-identity.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRoleWithWebIdentity",
+                    "Condition": {
+                        "StringEquals": {
+                            "cognito-identity.amazonaws.com:aud": { Ref: IdPool }
+                        },
+                        "ForAnyValue:StringLike": {
+                            "cognito-identity.amazonaws.com:amr": "authenticated"
+                        }
+                    }
+                }
+            ]
+        }
+      ManagedPolicyArns:
+        - !Ref PolicyCommon
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Tags:
+        - Key: Name
+          Value: !FindInMap [IamParams, RoleAuthenticated, Name]
+  
+# ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
+# ║ CloudFormation Template Outputs                                                               ║
+# ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
+# ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
+# Outputs:
