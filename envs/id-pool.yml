@@ -175,10 +175,48 @@ Resources:
   # -------------------------------------
   # Cognito User pool
   # -------------------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      UserPoolName: "user-pool-for-id-pool"
+      ### Authentication
+      # Sign-in Attributes
+      UsernameAttributes:
+        - email
+      # Sign-up Attributes
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: birthdate
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+          DeveloperOnlyAttribute: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      ### Settings
+      UserPoolTier: "ESSENTIALS"
+      UserPoolTags:
+        Name: "user-pool-for-id-pool"
+      DeletionProtection: INACTIVE
+
+  # -------------------------------------
+  # APP Client - spa
+  # -------------------------------------
+  
 
   # -------------------------------------
   # Role Attachment for Authenticated User
   # -------------------------------------
+
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
