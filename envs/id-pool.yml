@@ -171,7 +171,14 @@ Resources:
       IdentityPoolId: !Ref IdPool
       Roles: 
         "unauthenticated": !GetAtt RoleForAnonymous.Arn
-    
+
+  # -------------------------------------
+  # Cognito User pool
+  # -------------------------------------
+
+  # -------------------------------------
+  # Role Attachment for Authenticated User
+  # -------------------------------------
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
