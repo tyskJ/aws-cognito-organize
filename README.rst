@@ -78,6 +78,17 @@ User pool
 
 ID pool 検証用スタックデプロイ
 ---------------------------------------------------------------------
+* 変数ファイル作成
+
+.. code-block:: bash
+
+  cat <<EOF > config/id-pool-parameter.yml \
+  Parameters:
+    AuthUserEmail: "認証ユーザー用メールアドレス"
+  EOF
+
+* デプロイ
+
 .. code-block:: bash
 
   rain deploy id-pool.yml ID-POOL \
