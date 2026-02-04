@@ -161,7 +161,18 @@ Resources:
       Tags:
         - Key: Name
           Value: !FindInMap [IamParams, RoleAuthenticated, Name]
-  
+
+  # -------------------------------------
+  # Role Attachment for Anonymous User
+  # -------------------------------------
+  AttachAnonymous:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdPool
+      Roles: 
+        "unauthenticated": !GetAtt RoleForAnonymous.Arn
+    
+
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ CloudFormation Template Outputs                                                               ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
