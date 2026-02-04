@@ -82,7 +82,7 @@ ID pool 検証用スタックデプロイ
 
 .. code-block:: bash
 
-  cat <<EOF > config/id-pool-parameter.yml \
+  cat <<EOF > config/id-pool-parameter.yml
   Parameters:
     AuthUserEmail: "認証ユーザー用メールアドレス"
   EOF
