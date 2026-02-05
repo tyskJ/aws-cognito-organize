@@ -113,8 +113,8 @@ User pool 検証用スタックデプロイ
 ---------------------------------------------------------------------
 .. code-block:: bash
 
-  rain rm ID-POOL --profile admin
-  rain rm USER-POOL --profile admin
+  rain rm ID-POOL --profile admin -y
+  rain rm USER-POOL --profile admin -y
 
 .. note::
 
