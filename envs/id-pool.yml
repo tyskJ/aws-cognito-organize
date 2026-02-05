@@ -54,6 +54,64 @@ Mappings:
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
 Resources:
   # -------------------------------------
+  # Cognito User pool
+  # -------------------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      UserPoolName: "user-pool-for-id-pool"
+      ### Authentication
+      # Sign-in Attributes
+      UsernameAttributes:
+        - email
+      # Sign-up Attributes
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: birthdate
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+          DeveloperOnlyAttribute: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      ### Settings
+      UserPoolTier: "ESSENTIALS"
+      UserPoolTags:
+        Name: "user-pool-for-id-pool"
+      DeletionProtection: INACTIVE
+
+  # -------------------------------------
+  # APP Client - spa
+  # -------------------------------------
+  SpaClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: "spa-app"
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AuthSessionValidity: 3
+      RefreshTokenValidity: 5
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: minutes
+        IdToken: minutes
+      EnableTokenRevocation: true
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+
+  # -------------------------------------
   # Cognito ID pool
   # -------------------------------------
   IdPool:
@@ -163,77 +221,14 @@ Resources:
           Value: !FindInMap [IamParams, RoleAuthenticated, Name]
 
   # -------------------------------------
-  # Role Attachment for Anonymous User
+  # Role Attachment to ID pool
   # -------------------------------------
-  AttachAnonymous:
-    Type: AWS::Cognito::IdentityPoolRoleAttachment
-    Properties:
-      IdentityPoolId: !Ref IdPool
-      Roles: 
-        "unauthenticated": !GetAtt RoleForAnonymous.Arn
-
-  # -------------------------------------
-  # Cognito User pool
-  # -------------------------------------
-  UserPool:
-    Type: AWS::Cognito::UserPool
-    DeletionPolicy: Delete
-    UpdateReplacePolicy: Delete
-    Properties:
-      UserPoolName: "user-pool-for-id-pool"
-      ### Authentication
-      # Sign-in Attributes
-      UsernameAttributes:
-        - email
-      # Sign-up Attributes
-      AutoVerifiedAttributes:
-        - email
-      Schema:
-        - Name: birthdate
-          AttributeDataType: String
-          Required: true
-          Mutable: true
-          DeveloperOnlyAttribute: false
-      AdminCreateUserConfig:
-        AllowAdminCreateUserOnly: true
-      AccountRecoverySetting:
-        RecoveryMechanisms:
-          - Name: verified_email
-            Priority: 1
-          - Name: verified_phone_number
-            Priority: 2
-      ### Settings
-      UserPoolTier: "ESSENTIALS"
-      UserPoolTags:
-        Name: "user-pool-for-id-pool"
-      DeletionProtection: INACTIVE
-
-  # -------------------------------------
-  # APP Client - spa
-  # -------------------------------------
-  SpaClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: "spa-app"
-      UserPoolId: !Ref UserPool
-      GenerateSecret: false
-      AuthSessionValidity: 3
-      RefreshTokenValidity: 5
-      AccessTokenValidity: 60
-      IdTokenValidity: 60
-      TokenValidityUnits:
-        RefreshToken: days
-        AccessToken: minutes
-        IdToken: minutes
-      EnableTokenRevocation: true
-      PreventUserExistenceErrors: ENABLED
-      ExplicitAuthFlows:
-        - ALLOW_USER_PASSWORD_AUTH
-
-  # -------------------------------------
-  # Role Attachment for Authenticated User
-  # -------------------------------------
-
+  # AttachRoleIdPool:
+  #   Type: AWS::Cognito::IdentityPoolRoleAttachment
+  #   Properties:
+  #     IdentityPoolId: !Ref IdPool
+  #     Roles: 
+  #       "unauthenticated": !GetAtt RoleForAnonymous.Arn
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
