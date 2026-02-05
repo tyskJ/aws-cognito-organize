@@ -104,6 +104,7 @@ User pool 検証用スタックデプロイ
   Parameters:
     HostedZoneId: "パブリックホストゾーンID"
     DomainName: "API Gatwayカスタムドメイン名"
+    DeploymentTrigger: "v1"
   EOF
 
 * デプロイ
