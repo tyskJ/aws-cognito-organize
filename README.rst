@@ -96,6 +96,18 @@ ID pool 検証用スタックデプロイ
 
 User pool 検証用スタックデプロイ
 ---------------------------------------------------------------------
+* 変数ファイル作成
+
+.. code-block:: bash
+
+  cat <<EOF > config/user-pool-parameter.yml
+  Parameters:
+    HostedZoneId: "パブリックホストゾーンID"
+    DomainName: "API Gatwayカスタムドメイン名"
+  EOF
+
+* デプロイ
+
 .. code-block:: bash
 
   rain deploy user-pool.yml USER-POOL \
