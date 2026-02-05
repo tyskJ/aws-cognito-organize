@@ -226,12 +226,13 @@ Resources:
   # -------------------------------------
   # Role Attachment to ID pool
   # -------------------------------------
-  # AttachRoleIdPool:
-  #   Type: AWS::Cognito::IdentityPoolRoleAttachment
-  #   Properties:
-  #     IdentityPoolId: !Ref IdPool
-  #     Roles: 
-  #       "unauthenticated": !GetAtt RoleForAnonymous.Arn
+  AttachRoleIdPool:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdPool
+      Roles: 
+        "authenticated": !GetAtt RoleForAuthenticated.Arn
+        "unauthenticated": !GetAtt RoleForAnonymous.Arn
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
