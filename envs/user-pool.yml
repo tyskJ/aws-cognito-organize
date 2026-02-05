@@ -9,19 +9,44 @@ Transform:
 # ║ Metadata                                                                                      ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
-# Metadata: 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Domain Settings
+        Parameters:
+          - HostedZoneId
+          - DomainName
+      - Label:
+          default: API Gatway Settings
+        Parameters:
+          - DeploymentTrigger
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Parameters                                                                                    ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
-# Parameters: 
+Parameters: 
+  HostedZoneId:
+    Description: Public Hosted Zone ID
+    Type: String
+  DomainName:
+    Description: API Gateway Custom Domain Name
+    Type: String
+  DeploymentTrigger:
+    Description: Change this value to force API redeployment
+    Type: String
+    Default: v1
+
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Mappings                                                                                      ║
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
-# Mappings: 
+Mappings:
+  ApiParams:
+    Stage:
+      Name: prod
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Conditions                                                                                    ║
@@ -34,6 +59,242 @@ Transform:
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
 Resources: 
+  ############################################################
+  # Cognito User Pool
+  ############################################################
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      UserPoolName: "user-pool-for-api-gateway"
+      ### Authentication
+      # Sign-in Attributes
+      AliasAttributes:
+        - email
+      # Sign-up Attributes
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: birthdate
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+          DeveloperOnlyAttribute: false
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+          - Name: verified_phone_number
+            Priority: 2
+      ### Settings
+      UserPoolTier: "ESSENTIALS"
+      UserPoolTags:
+        Name: "user-pool-for-api-gateway"
+      DeletionProtection: INACTIVE
+
+  ############################################################
+  # App Client - spa
+  ############################################################
+  SpaClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: "spa-app"
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AuthSessionValidity: 3
+      RefreshTokenValidity: 5
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: minutes
+        IdToken: minutes
+      EnableTokenRevocation: true
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+
+  ############################################################
+  # API Gateway
+  ############################################################
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: rest-api
+      Description: Test Rest API (Any)
+      EndpointConfiguration:
+        IpAddressType: ipv4
+        Types:
+          - REGIONAL
+      ApiKeySourceType: HEADER # X-API-Key
+      DisableExecuteApiEndpoint: true
+      Tags:
+        - Key: Name
+          Value: rest-api
+
+  ############################################################
+  # Resource - Any Path
+  ############################################################
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: "{proxy+}"
+
+  ############################################################
+  # Authorizer
+  ############################################################
+  CognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      RestApiId: !Ref RestApi
+      Name: cognito-authorizer
+      Type: COGNITO_USER_POOLS
+      IdentitySource: method.request.header.Authorization
+      ProviderARNs:
+        - !GetAtt UserPool.Arn
+
+  ############################################################
+  # Method - Mock
+  ############################################################
+  AnyProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref ApiResource
+      HttpMethod: ANY
+      AuthorizationType: COGNITO_USER_POOLS
+      AuthorizerId: !Ref CognitoAuthorizer
+      ApiKeyRequired: true
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: |
+            { "statusCode": 200 }
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseTemplates:
+              application/json: |
+                {
+                  "message": "Hello from ANY proxy mock response",
+                  "path": "$context.resourcePath",
+                  "method": "$context.httpMethod"
+                }
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: Empty
+
+  ############################################################
+  # Deployment
+  ############################################################
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - AnyProxyMethod
+    Properties:
+      RestApiId: !Ref RestApi
+      StageName: !FindInMap [ApiParams, Stage, Name]
+      Description: !Sub "deployment-${DeploymentTrigger}"
+
+  ############################################################
+  # Usage Plan
+  ############################################################
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn:
+      - ApiDeployment
+    Properties:
+      Name: api-key
+      Description: API Key
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref RestApi
+          StageName: !FindInMap [ApiParams, Stage, Name]
+      Tags:
+        - Key: Name
+          Value: api-key
+
+  ApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ApiDeployment
+    Properties:
+      UsagePlanName: usage-plan
+      Description: usage-plan
+      ApiStages:
+        - ApiId: !Ref RestApi
+          Stage: !FindInMap [ApiParams, Stage, Name]
+      Throttle:
+        RateLimit: 10
+        BurstLimit: 5
+      Quota:
+        Limit: 1000
+        Period: MONTH
+
+  ApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyType: API_KEY
+      KeyId: !Ref ApiKey
+      UsagePlanId: !Ref ApiUsagePlan
+
+  ############################################################
+  # ACM
+  ############################################################
+  ApiCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      KeyAlgorithm: EC_prime256v1
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+      Tags:
+        - Key: Name
+          Value: !Ref DomainName
+
+  ############################################################
+  # Custom Domain
+  ############################################################
+  ApiCustomDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !Ref DomainName
+      RoutingMode: BASE_PATH_MAPPING_ONLY
+      EndpointConfiguration:
+        IpAddressType: ipv4
+        Types:
+          - REGIONAL
+      RegionalCertificateArn: !Ref ApiCertificate
+      SecurityPolicy: TLS_1_2
+
+  ApiBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn:
+      - ApiDeployment
+    Properties:
+      DomainName: !Ref ApiCustomDomain
+      RestApiId: !Ref RestApi
+      Stage: !FindInMap [ApiParams, Stage, Name]
+
+  ############################################################
+  # Record
+  ############################################################
+  ApiDomainRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApiCustomDomain.RegionalDomainName
+        HostedZoneId: !GetAtt ApiCustomDomain.RegionalHostedZoneId
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
