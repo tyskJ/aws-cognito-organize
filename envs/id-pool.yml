@@ -211,7 +211,24 @@ Resources:
   # -------------------------------------
   # APP Client - spa
   # -------------------------------------
-  
+  SpaClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: "spa-app"
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      AuthSessionValidity: 3
+      RefreshTokenValidity: 5
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      TokenValidityUnits:
+        RefreshToken: days
+        AccessToken: minutes
+        IdToken: minutes
+      EnableTokenRevocation: true
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
 
   # -------------------------------------
   # Role Attachment for Authenticated User
