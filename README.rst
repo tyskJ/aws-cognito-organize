@@ -88,7 +88,7 @@ ID pool 検証用スタックデプロイ
   rain deploy id-pool.yml ID-POOL \
   --s3-bucket cfn-working \
   --config config/id-pool-parameter.yml \
-  --profile admin
+  --profile admin -y
 
 .. note::
 
