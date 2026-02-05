@@ -64,7 +64,7 @@ Resources:
       UserPoolName: "user-pool-for-id-pool"
       ### Authentication
       # Sign-in Attributes
-      UsernameAttributes:
+      AliasAttributes:
         - email
       # Sign-up Attributes
       AutoVerifiedAttributes:
@@ -233,6 +233,24 @@ Resources:
       Roles: 
         "authenticated": !GetAtt RoleForAuthenticated.Arn
         "unauthenticated": !GetAtt RoleForAnonymous.Arn
+
+  # -------------------------------------
+  # Add User to User Pool Directory
+  # -------------------------------------
+  AuthUser:
+    Type: AWS::Cognito::UserPoolUser
+    Properties:
+      UserPoolId: !Ref UserPool
+      Username: testuser
+      DesiredDeliveryMediums:
+        - EMAIL
+      UserAttributes:
+        - Name: email
+          Value: !Ref AuthUserEmail
+        - Name: email_verified
+          Value: "true"
+        - Name: birthdate
+          Value: "2000-11-11"
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Outputs                                                                                       ║
