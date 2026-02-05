@@ -21,6 +21,10 @@ Metadata:
           default: API Gatway Settings
         Parameters:
           - DeploymentTrigger
+      - Label:
+          default: User Pool Configuration
+        Parameters:
+          - AuthUserEmail
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Parameters                                                                                    ║
@@ -37,7 +41,9 @@ Parameters:
     Description: Change this value to force API redeployment
     Type: String
     Default: v1
-
+  AuthUserEmail:
+    Description: Auth User Email Address
+    Type: String
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Mappings                                                                                      ║
@@ -116,6 +122,22 @@ Resources:
       PreventUserExistenceErrors: ENABLED
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
+
+  ############################################################
+  # Add User to User Pool Directory
+  ############################################################
+  AuthUser:
+    Type: AWS::Cognito::UserPoolUser
+    Properties:
+      UserPoolId: !Ref UserPool
+      Username: testuser
+      DesiredDeliveryMediums:
+        - EMAIL
+      UserAttributes:
+        - Name: email
+          Value: !Ref AuthUserEmail
+        - Name: email_verified
+          Value: "true"
 
   ############################################################
   # API Gateway
