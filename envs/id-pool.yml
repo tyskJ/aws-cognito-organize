@@ -53,9 +53,9 @@ Mappings:
 # ╠═════════════════════╤═════════════════════════════════════════════════════════════════════════╣
 # ╚═════════════════════╧═════════════════════════════════════════════════════════════════════════╝
 Resources:
-  # -------------------------------------
-  # Cognito User pool
-  # -------------------------------------
+  ############################################################
+  # Cognito User Pool
+  ############################################################
   UserPool:
     Type: AWS::Cognito::UserPool
     DeletionPolicy: Delete
@@ -89,9 +89,9 @@ Resources:
         Name: "user-pool-for-id-pool"
       DeletionProtection: INACTIVE
 
-  # -------------------------------------
-  # APP Client - spa
-  # -------------------------------------
+  ############################################################
+  # App Client - spa
+  ############################################################
   SpaClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -111,9 +111,9 @@ Resources:
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
 
-  # -------------------------------------
+  ############################################################
   # Cognito ID pool
-  # -------------------------------------
+  ############################################################
   IdPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
@@ -126,9 +126,9 @@ Resources:
         - Key: Name
           Value: "id-pool"
 
-  # -------------------------------------
-  # IAM Policy - Common
-  # -------------------------------------
+  ############################################################
+  # IAM Policy - common
+  ############################################################
   PolicyCommon:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -151,9 +151,9 @@ Resources:
             ]
         }
 
-  # -------------------------------------
-  # IAM Role - Anonymous User
-  # -------------------------------------
+  ############################################################
+  # IAM Role - Anonymous user
+  ############################################################-
   RoleForAnonymous:
     Type: AWS::IAM::Role
     Properties:
@@ -187,9 +187,9 @@ Resources:
         - Key: Name
           Value: !FindInMap [IamParams, RoleAnonymous, Name]
 
-  # -------------------------------------
+  ############################################################
   # IAM Role - Authenticated User
-  # -------------------------------------
+  ############################################################
   RoleForAuthenticated:
     Type: AWS::IAM::Role
     Properties:
@@ -223,9 +223,9 @@ Resources:
         - Key: Name
           Value: !FindInMap [IamParams, RoleAuthenticated, Name]
 
-  # -------------------------------------
+  ############################################################
   # Role Attachment to ID pool
-  # -------------------------------------
+  ############################################################
   AttachRoleIdPool:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
     Properties:
@@ -234,9 +234,9 @@ Resources:
         "authenticated": !GetAtt RoleForAuthenticated.Arn
         "unauthenticated": !GetAtt RoleForAnonymous.Arn
 
-  # -------------------------------------
+  ############################################################
   # Add User to User Pool Directory
-  # -------------------------------------
+  ############################################################
   AuthUser:
     Type: AWS::Cognito::UserPoolUser
     Properties:
