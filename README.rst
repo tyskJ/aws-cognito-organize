@@ -114,7 +114,7 @@ User pool 検証用スタックデプロイ
   rain deploy user-pool.yml USER-POOL \
   --s3-bucket cfn-working \
   --config config/user-pool-parameter.yml \
-  --profile admin
+  --profile admin -y
 
 .. note::
 
