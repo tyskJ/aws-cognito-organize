@@ -143,3 +143,14 @@ User pool 検証用スタックデプロイ
 .. note::
 
   * S3バケット名は必要に応じて修正してください
+
+参考資料
+=====================================================================
+リファレンス
+---------------------------------------------------------------------
+* `AWS リソースおよびプロパティタイプのリファレンス - Template Reference <https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/TemplateReference/aws-template-resource-type-ref.html>`_
+
+ブログ
+---------------------------------------------------------------------
+* `CDKでの aws_apigateway と aws_apigatewayv2 の違い - Zenn <https://zenn.dev/iret/articles/03af759a62f855>`_
+* `API GatewayをCloudFormationで構築したら、マネコンとの項目の関連がわからなすぎたので、二度と調べなくていいようにまとめました - DevelopersIO <https://dev.classmethod.jp/articles/put-together-about-the-relationship-between-cfn-and-management-console-items/>`_
