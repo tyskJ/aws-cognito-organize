@@ -103,7 +103,7 @@ User pool 検証用スタックデプロイ
   cat <<EOF > config/user-pool-parameter.yml
   Parameters:
     HostedZoneId: "パブリックホストゾーンID"
-    DomainName: "API Gatwayカスタムドメイン名"
+    Fqdn: "API Gatwayカスタムドメイン名"
     DeploymentTrigger: "v1"
     AuthUserEmail: "認証ユーザー用メールアドレス"
   EOF

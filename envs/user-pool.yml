@@ -16,7 +16,7 @@ Metadata:
           default: Domain Settings
         Parameters:
           - HostedZoneId
-          - DomainName
+          - Fqdn
       - Label:
           default: API Gatway Settings
         Parameters:
@@ -34,7 +34,7 @@ Parameters:
   HostedZoneId:
     Description: Public Hosted Zone ID
     Type: String
-  DomainName:
+  Fqdn:
     Description: API Gateway Custom Domain Name
     Type: String
   DeploymentTrigger:
@@ -271,15 +271,15 @@ Resources:
   ApiCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Ref DomainName
+      DomainName: !Ref Fqdn
       KeyAlgorithm: EC_prime256v1
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: !Ref DomainName
+        - DomainName: !Ref Fqdn
           HostedZoneId: !Ref HostedZoneId
       Tags:
         - Key: Name
-          Value: !Ref DomainName
+          Value: !Ref Fqdn
 
   ############################################################
   # Custom Domain
@@ -287,7 +287,7 @@ Resources:
   ApiCustomDomain:
     Type: AWS::ApiGateway::DomainName
     Properties:
-      DomainName: !Ref DomainName
+      DomainName: !Ref Fqdn
       RoutingMode: BASE_PATH_MAPPING_ONLY
       EndpointConfiguration:
         IpAddressType: ipv4
@@ -312,7 +312,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Ref DomainName
+      Name: !Ref Fqdn
       Type: A
       AliasTarget:
         DNSName: !GetAtt ApiCustomDomain.RegionalDomainName
