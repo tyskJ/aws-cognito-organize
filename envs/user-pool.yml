@@ -21,10 +21,15 @@ Metadata:
           default: API Gatway Settings
         Parameters:
           - DeploymentTrigger
+          - StageVersion
       - Label:
           default: User Pool Configuration
         Parameters:
           - AuthUserEmail
+  cfn-lint:
+    config:
+      ignore_checks:
+        - E3002
 
 # ╔═══════════════════════════════════════════════════════════════════════════════════════════════╗
 # ║ Parameters                                                                                    ║
@@ -38,9 +43,11 @@ Parameters:
     Description: API Gateway Custom Domain Name
     Type: String
   DeploymentTrigger:
-    Description: Change this value to force API redeployment
+    Description: API deployment Version
+    Type: CommaDelimitedList
+  StageVersion:
+    Description: Change Deployment Version Association to Stage
     Type: String
-    Default: v1
   AuthUserEmail:
     Description: Auth User Email Address
     Type: String
@@ -214,14 +221,32 @@ Resources:
   ############################################################
   # Deployment
   ############################################################
-  ApiDeployment:
-    Type: AWS::ApiGateway::Deployment
-    DependsOn:
-      - AnyProxyMethod
+  "Fn::ForEach::Deployment":
+    - DeploymentVariable
+    - !Ref DeploymentTrigger
+    - Deployment${DeploymentVariable}:
+        Type: AWS::ApiGateway::Deployment
+        DependsOn:
+          - AnyProxyMethod
+        Properties:
+          RestApiId: !Ref RestApi
+          Description: !Sub "deployment-${DeploymentVariable}"
+
+  ############################################################
+  # Stage
+  ############################################################
+  ProdStage:
+    Type: AWS::ApiGateway::Stage
     Properties:
       RestApiId: !Ref RestApi
+      DeploymentId: !Ref
+        Fn::Sub:
+          - "Deployment${number}"
+          - number: !Ref StageVersion
       StageName: !FindInMap [ApiParams, Stage, Name]
-      Description: !Sub "deployment-${DeploymentTrigger}"
+      Tags:
+        - Key: Name
+          Value: !FindInMap [ApiParams, Stage, Name]
 
   ############################################################
   # Usage Plan
@@ -229,7 +254,7 @@ Resources:
   ApiKey:
     Type: AWS::ApiGateway::ApiKey
     DependsOn:
-      - ApiDeployment
+      - ProdStage
     Properties:
       Name: api-key
       Description: API Key
@@ -244,7 +269,7 @@ Resources:
   ApiUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
     DependsOn:
-      - ApiDeployment
+      - ProdStage
     Properties:
       UsagePlanName: usage-plan
       Description: usage-plan
@@ -299,7 +324,7 @@ Resources:
   ApiBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     DependsOn:
-      - ApiDeployment
+      - ProdStage
     Properties:
       DomainName: !Ref ApiCustomDomain
       RestApiId: !Ref RestApi

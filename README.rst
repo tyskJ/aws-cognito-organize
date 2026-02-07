@@ -104,9 +104,25 @@ User pool 検証用スタックデプロイ
   Parameters:
     HostedZoneId: "パブリックホストゾーンID"
     Fqdn: "API Gatwayカスタムドメイン名"
-    DeploymentTrigger: "v1"
+    DeploymentTrigger: V1
+    StageVersion: V1
     AuthUserEmail: "認証ユーザー用メールアドレス"
   EOF
+
+.. note::
+
+  * `DeploymentTrigger` は以下のように追加していくこと
+  * 追加する毎にデプロイされていく
+
+.. code-block::
+
+  DeploymentTrigger: V1,
+    V2,
+    V3
+
+.. note::
+
+  * `StageVersion` はステージに紐づけるデプロイのバージョンとすること
 
 * デプロイ
 
