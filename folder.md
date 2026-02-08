@@ -7,8 +7,8 @@
 └── envs
     ├── config
     │   ├── dummy
-    │   ├── id-pool-parameter.yml       ID-POOL スタック用パラメータファイル
-    │   └── user-pool-parameter.yml     USER-POOL スタック用パラメータファイル
+    │   ├── id-pool-parameter.yml       ID-POOL スタック用パラメータファイル (Ignore Git)
+    │   └── user-pool-parameter.yml     USER-POOL スタック用パラメータファイル (Ignore Git)
     ├── id-pool.yml                     ID-POOL スタック定義ファイル
     └── user-pool.yml                   USER-POOL スタック定義ファイル
 ```
